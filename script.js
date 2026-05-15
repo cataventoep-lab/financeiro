@@ -34,7 +34,8 @@ const VIEW_TITLES = {
   dashboard: 'Dashboard',
   fisico: 'Financeiro Físico',
   digital: 'Financeiro Digital',
-  receitas: 'Receitas'
+  receitas: 'Receitas',
+  checklist: 'A Pagar'
 };
 
 const LS_GASTOS    = 'catavento_gastos';
@@ -206,6 +207,7 @@ function renderView(view) {
   else if (view === 'fisico') renderFisico();
   else if (view === 'digital') renderDigital();
   else if (view === 'receitas') renderReceitas();
+  else if (view === 'checklist') renderChecklist();
 }
 
 // ─────────────────────────────────────────────
@@ -354,54 +356,58 @@ function renderAlerts(gastos, receitas) {
   const section = document.getElementById('alerts-section');
   if (!section) return;
 
-  const atrasados = gastos.filter(g => g.status === 'atrasado');
   const today = todayStr();
-  const in7days = new Date();
-  in7days.setDate(in7days.getDate() + 7);
-  const in7Str = in7days.toISOString().split('T')[0];
-  const vencendo = gastos.filter(g => g.status === 'pendente' && g.dataVencimento >= today && g.dataVencimento <= in7Str);
+  const in7days = new Date(); in7days.setDate(in7days.getDate() + 7);
+  const in7Str  = in7days.toISOString().split('T')[0];
+
+  const atrasados        = gastos.filter(g => g.status === 'atrasado');
+  const vencendo         = gastos.filter(g => g.status === 'pendente' && g.dataVencimento >= today && g.dataVencimento <= in7Str);
   const receitasPendentes = receitas.filter(r => r.status === 'pendente');
 
   let html = '';
 
   if (atrasados.length > 0) {
-    html += `<div class="alert alert-danger">
+    const total = atrasados.reduce((s, g) => s + g.valor, 0);
+    html += `<div class="alert-item alert-danger" role="alert">
       <i data-lucide="alert-triangle"></i>
-      <div>
-        <strong>${atrasados.length} conta(s) atrasada(s)</strong>
-        <span> — ${formatBRL(atrasados.reduce((s, g) => s + g.valor, 0))} em aberto</span>
-        <ul class="alert-list">${atrasados.slice(0, 3).map(g =>
-          `<li>${g.descricao} (${formatDate(g.dataVencimento)}) — ${formatBRL(g.valor)}</li>`
-        ).join('')}${atrasados.length > 3 ? `<li>...e mais ${atrasados.length - 3}</li>` : ''}</ul>
+      <div class="alert-item-text">
+        <strong>${atrasados.length} conta${atrasados.length > 1 ? 's' : ''} atrasada${atrasados.length > 1 ? 's' : ''}</strong>
+        — ${formatBRL(total)} em aberto
       </div>
+      <button class="alert-action-btn" data-view="checklist">Ver</button>
     </div>`;
   }
 
   if (vencendo.length > 0) {
-    html += `<div class="alert alert-warning">
+    const total = vencendo.reduce((s, g) => s + g.valor, 0);
+    html += `<div class="alert-item alert-warning" role="alert">
       <i data-lucide="clock"></i>
-      <div>
-        <strong>${vencendo.length} conta(s) vencendo em 7 dias</strong>
-        <span> — ${formatBRL(vencendo.reduce((s, g) => s + g.valor, 0))}</span>
-        <ul class="alert-list">${vencendo.slice(0, 3).map(g =>
-          `<li>${g.descricao} (${formatDate(g.dataVencimento)}) — ${formatBRL(g.valor)}</li>`
-        ).join('')}${vencendo.length > 3 ? `<li>...e mais ${vencendo.length - 3}</li>` : ''}</ul>
+      <div class="alert-item-text">
+        <strong>${vencendo.length} conta${vencendo.length > 1 ? 's' : ''}</strong> vence${vencendo.length === 1 ? '' : 'm'} em 7 dias — ${formatBRL(total)}
       </div>
+      <button class="alert-action-btn" data-view="checklist">Ver</button>
     </div>`;
   }
 
   if (receitasPendentes.length > 0) {
-    html += `<div class="alert alert-info">
-      <i data-lucide="info"></i>
-      <div>
-        <strong>${receitasPendentes.length} receita(s) pendente(s)</strong>
-        <span> — ${formatBRL(receitasPendentes.reduce((s, r) => s + r.valorPrevisto, 0))} aguardando</span>
+    const total = receitasPendentes.reduce((s, r) => s + r.valorPrevisto, 0);
+    html += `<div class="alert-item alert-info" role="alert">
+      <i data-lucide="trending-up"></i>
+      <div class="alert-item-text">
+        <strong>${receitasPendentes.length} receita${receitasPendentes.length > 1 ? 's' : ''} pendente${receitasPendentes.length > 1 ? 's' : ''}</strong>
+        — ${formatBRL(total)} a receber
       </div>
+      <button class="alert-action-btn" data-view="receitas">Ver</button>
     </div>`;
   }
 
   section.innerHTML = html;
   if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [section] });
+
+  // "Ver" buttons navigate to the relevant view
+  section.querySelectorAll('.alert-action-btn[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => navigateTo(btn.dataset.view));
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -691,6 +697,113 @@ function renderReceitas() {
   setText('total-pendente-receitas', formatBRL(totalPendente));
 
   renderListReceitas('lista-receitas', 'empty-receitas', items);
+}
+
+// ─────────────────────────────────────────────
+// CHECKLIST (A Pagar)
+// ─────────────────────────────────────────────
+function renderChecklist() {
+  const activeAreaBtn = document.querySelector('.checklist-area-btn.active');
+  const areaFil = activeAreaBtn ? activeAreaBtn.dataset.area : '';
+
+  // All months: show all pending/atrasado, not just current month
+  let items = state.gastos.filter(g => g.status === 'pendente' || g.status === 'atrasado');
+  if (areaFil) items = items.filter(g => g.area === areaFil);
+
+  // Sort: atrasados first (oldest first), then pendentes by vencimento
+  const atrasados = items.filter(g => g.status === 'atrasado').sort((a, b) => a.dataVencimento.localeCompare(b.dataVencimento));
+  const pendentes = items.filter(g => g.status === 'pendente').sort((a, b) => a.dataVencimento.localeCompare(b.dataVencimento));
+
+  const totalAtrasado = atrasados.reduce((s, g) => s + g.valor, 0);
+  const totalPendente = pendentes.reduce((s, g) => s + g.valor, 0);
+  const totalGeral    = totalAtrasado + totalPendente;
+
+  setText('checklist-total-atrasado', formatBRL(totalAtrasado));
+  setText('checklist-count-atrasado', `${atrasados.length} conta${atrasados.length !== 1 ? 's' : ''}`);
+  setText('checklist-total-pendente', formatBRL(totalPendente));
+  setText('checklist-count-pendente', `${pendentes.length} conta${pendentes.length !== 1 ? 's' : ''}`);
+  setText('checklist-total-geral', formatBRL(totalGeral));
+  setText('checklist-count-geral', `${items.length} conta${items.length !== 1 ? 's' : ''}`);
+
+  const list  = document.getElementById('checklist-list');
+  const empty = document.getElementById('checklist-empty');
+  if (!list) return;
+
+  if (items.length === 0) {
+    list.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+
+  let html = '';
+
+  if (atrasados.length > 0) {
+    html += `<div class="checklist-group">
+      <div class="checklist-group-header danger">
+        <i data-lucide="alert-triangle"></i>
+        Atrasadas <span class="checklist-group-count">${atrasados.length}</span>
+      </div>
+      ${atrasados.map(g => renderChecklistItem(g)).join('')}
+    </div>`;
+  }
+
+  if (pendentes.length > 0) {
+    html += `<div class="checklist-group">
+      <div class="checklist-group-header warning">
+        <i data-lucide="clock"></i>
+        Pendentes <span class="checklist-group-count">${pendentes.length}</span>
+      </div>
+      ${pendentes.map(g => renderChecklistItem(g)).join('')}
+    </div>`;
+  }
+
+  list.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [list] });
+
+  // Attach pay buttons
+  list.querySelectorAll('.checklist-pay-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      marcarComoPago(btn.dataset.id, btn.dataset.type);
+    });
+  });
+}
+
+function renderChecklistItem(g) {
+  const today     = todayStr();
+  const isOverdue = g.status === 'atrasado';
+  const daysStr   = getDaysLabel(g.dataVencimento, today);
+  const areaLabel = g.area === 'fisico' ? 'Físico' : 'Digital';
+  const areaClass = g.area === 'fisico' ? 'fisico' : 'digital';
+
+  return `
+    <div class="checklist-item ${isOverdue ? 'overdue' : ''}">
+      <button class="checklist-pay-btn" data-id="${g.id}" data-type="${g.area}" title="Marcar como pago" aria-label="Marcar ${escapeHtml(g.descricao)} como pago">
+        <i data-lucide="check"></i>
+      </button>
+      <div class="checklist-item-body">
+        <div class="checklist-item-title">${escapeHtml(g.descricao)}</div>
+        <div class="checklist-item-meta">
+          <span class="checklist-area-tag ${areaClass}">${areaLabel}</span>
+          ${g.categoria ? `<span>${escapeHtml(g.categoria)}</span>` : ''}
+          ${g.conta ? `<span>${escapeHtml(g.conta)}</span>` : ''}
+        </div>
+      </div>
+      <div class="checklist-item-right">
+        <div class="checklist-item-value">${formatBRL(g.valor)}</div>
+        <div class="checklist-item-date ${isOverdue ? 'overdue' : ''}">${daysStr}</div>
+      </div>
+    </div>`;
+}
+
+function getDaysLabel(dataVencimento, today) {
+  if (!dataVencimento) return '';
+  const diff = Math.round((new Date(dataVencimento + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);
+  if (diff < 0)  return `${Math.abs(diff)}d em atraso`;
+  if (diff === 0) return 'Vence hoje';
+  if (diff === 1) return 'Vence amanhã';
+  return `Vence em ${diff}d`;
 }
 
 // ─────────────────────────────────────────────
@@ -1648,9 +1761,8 @@ function setupEventListeners() {
 
   // Filter panel (mobile bottom sheet)
   setupFilterPanel();
-
-  // "Mais" menu (mobile)
-  setupMaisMenu();
+  setupBackupRestore();
+  setupChecklistFilters();
 
   // Keyboard close modal
   document.addEventListener('keydown', (e) => {
@@ -1658,7 +1770,6 @@ function setupEventListeners() {
       const overlay = document.getElementById('modal-overlay');
       if (overlay && !overlay.classList.contains('hidden')) closeModal();
       closeFilterPanel();
-      closeMaisMenu();
     }
   });
 }
@@ -1766,36 +1877,16 @@ function getFilterConfig(view) {
 }
 
 // ─────────────────────────────────────────────
-// MAIS MENU (mobile)
+// SIDEBAR BACKUP/RESTORE BUTTONS
 // ─────────────────────────────────────────────
-function setupMaisMenu() {
-  const maisBtn   = document.getElementById('btn-mais');
-  const overlay   = document.getElementById('mais-overlay');
-  const closeBtn  = document.getElementById('mais-menu-close');
-  const backupBtn = document.getElementById('mais-backup');
-  const restoreBtn= document.getElementById('mais-restore');
-  const csvBtn    = document.getElementById('mais-export-csv');
-  const fileInput = document.getElementById('restore-file-input');
+function setupBackupRestore() {
+  const backupBtn  = document.getElementById('sidebar-backup-btn');
+  const restoreBtn = document.getElementById('sidebar-restore-btn');
+  const fileInput  = document.getElementById('restore-file-input');
 
-  if (maisBtn)    maisBtn.addEventListener('click', openMaisMenu);
-  if (overlay)    overlay.addEventListener('click', closeMaisMenu);
-  if (closeBtn)   closeBtn.addEventListener('click', closeMaisMenu);
-  if (backupBtn)  backupBtn.addEventListener('click', () => { closeMaisMenu(); backupData(); });
-  if (restoreBtn) restoreBtn.addEventListener('click', () => { closeMaisMenu(); fileInput && fileInput.click(); });
-  if (csvBtn)     csvBtn.addEventListener('click', () => { closeMaisMenu(); exportCSVAll(); });
+  if (backupBtn)  backupBtn.addEventListener('click', backupData);
+  if (restoreBtn) restoreBtn.addEventListener('click', () => fileInput && fileInput.click());
   if (fileInput)  fileInput.addEventListener('change', (e) => restoreData(e.target.files[0]));
-}
-
-function openMaisMenu() {
-  document.getElementById('mais-overlay').classList.add('open');
-  document.getElementById('mais-menu').classList.add('open');
-}
-
-function closeMaisMenu() {
-  const overlay = document.getElementById('mais-overlay');
-  const menu    = document.getElementById('mais-menu');
-  if (overlay) overlay.classList.remove('open');
-  if (menu)    menu.classList.remove('open');
 }
 
 function exportCSVAll() {
@@ -1805,6 +1896,19 @@ function exportCSVAll() {
   const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   downloadBlob(csv, `catavento-${state.currentMonth}.csv`, 'text/csv;charset=utf-8;﻿');
   showToast('CSV exportado!', 'success');
+}
+
+// ─────────────────────────────────────────────
+// CHECKLIST AREA FILTER BUTTONS
+// ─────────────────────────────────────────────
+function setupChecklistFilters() {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.checklist-area-btn');
+    if (!btn) return;
+    document.querySelectorAll('.checklist-area-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderChecklist();
+  });
 }
 
 function setupListDelegation(listId) {

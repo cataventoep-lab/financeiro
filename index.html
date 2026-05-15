@@ -71,10 +71,15 @@
       </nav>
 
       <div id="sidebar-footer">
-        <button id="sidebar-settings-btn" title="Configurações">
-          <i data-lucide="settings"></i>
-          <span>Configurações</span>
+        <button class="sidebar-footer-btn" id="sidebar-backup-btn" title="Backup JSON">
+          <i data-lucide="download"></i>
+          <span>Backup</span>
         </button>
+        <button class="sidebar-footer-btn" id="sidebar-restore-btn" title="Restaurar backup">
+          <i data-lucide="upload"></i>
+          <span>Restaurar</span>
+        </button>
+        <input type="file" id="restore-file-input" accept=".json" class="hidden" />
       </div>
     </aside>
 
@@ -463,6 +468,50 @@
 
         </section>
 
+        <!-- ========== VIEW: CHECKLIST (A Pagar) ========== -->
+        <section id="view-checklist" class="view hidden" data-title="A Pagar">
+
+          <!-- Resumo rápido -->
+          <div id="checklist-summary" class="checklist-summary">
+            <div class="checklist-summary-item danger">
+              <div class="checklist-summary-label">Atrasados</div>
+              <div class="checklist-summary-value" id="checklist-total-atrasado">R$ 0,00</div>
+              <div class="checklist-summary-count" id="checklist-count-atrasado">0 conta(s)</div>
+            </div>
+            <div class="checklist-summary-item warning">
+              <div class="checklist-summary-label">Pendentes</div>
+              <div class="checklist-summary-value" id="checklist-total-pendente">R$ 0,00</div>
+              <div class="checklist-summary-count" id="checklist-count-pendente">0 conta(s)</div>
+            </div>
+            <div class="checklist-summary-item primary">
+              <div class="checklist-summary-label">Total a pagar</div>
+              <div class="checklist-summary-value" id="checklist-total-geral">R$ 0,00</div>
+              <div class="checklist-summary-count" id="checklist-count-geral">0 conta(s)</div>
+            </div>
+          </div>
+
+          <!-- Filtro de área -->
+          <div class="checklist-filter-row">
+            <button class="checklist-area-btn active" data-area="">Todos</button>
+            <button class="checklist-area-btn" data-area="fisico">
+              <i data-lucide="building-2"></i> Físico
+            </button>
+            <button class="checklist-area-btn" data-area="digital">
+              <i data-lucide="monitor"></i> Digital
+            </button>
+          </div>
+
+          <!-- Lista de checklist -->
+          <div id="checklist-list"></div>
+
+          <div id="checklist-empty" class="empty-state hidden">
+            <i data-lucide="party-popper"></i>
+            <p>Tudo em dia!</p>
+            <span class="empty-hint">Nenhuma conta pendente ou atrasada neste mês.</span>
+          </div>
+
+        </section>
+
       </main>
     </div>
   </div>
@@ -485,9 +534,9 @@
       <div class="nav-icon-wrap"><i data-lucide="trending-up"></i></div>
       <span>Receitas</span>
     </button>
-    <button class="bottom-nav-item" id="btn-mais" title="Mais opções">
-      <div class="nav-icon-wrap"><i data-lucide="more-horizontal"></i></div>
-      <span>Mais</span>
+    <button class="bottom-nav-item" data-view="checklist" title="A Pagar">
+      <div class="nav-icon-wrap"><i data-lucide="circle-check-big"></i></div>
+      <span>A Pagar</span>
     </button>
   </nav>
 
@@ -580,26 +629,6 @@
       <button class="btn btn-ghost btn-sm" id="filter-panel-clear" style="flex:1">Limpar tudo</button>
       <button class="btn btn-primary btn-sm" id="filter-panel-apply" style="flex:2">Aplicar filtros</button>
     </div>
-  </div>
-
-  <!-- ===================== MAIS MENU (mobile) ===================== -->
-  <div id="mais-overlay"></div>
-  <div id="mais-menu" role="dialog" aria-label="Mais opções">
-    <div class="filter-panel-handle"></div>
-    <div class="filter-panel-header">
-      <span class="filter-panel-title">Mais opções</span>
-      <button class="btn-icon" id="mais-menu-close"><i data-lucide="x"></i></button>
-    </div>
-    <button class="mais-menu-item" id="mais-backup">
-      <i data-lucide="download"></i> Backup dos dados (JSON)
-    </button>
-    <button class="mais-menu-item" id="mais-restore">
-      <i data-lucide="upload"></i> Restaurar backup
-    </button>
-    <button class="mais-menu-item" id="mais-export-csv">
-      <i data-lucide="file-spreadsheet"></i> Exportar CSV
-    </button>
-    <input type="file" id="restore-file-input" accept=".json" class="hidden" />
   </div>
 
   <!-- ===================== TOASTS ===================== -->

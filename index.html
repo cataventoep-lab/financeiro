@@ -71,10 +71,15 @@
       </nav>
 
       <div id="sidebar-footer">
-        <button id="sidebar-settings-btn" title="Configurações">
-          <i data-lucide="settings"></i>
-          <span>Configurações</span>
+        <button class="sidebar-footer-btn" id="sidebar-backup-btn" title="Backup JSON">
+          <i data-lucide="download"></i>
+          <span>Backup</span>
         </button>
+        <button class="sidebar-footer-btn" id="sidebar-restore-btn" title="Restaurar backup">
+          <i data-lucide="upload"></i>
+          <span>Restaurar</span>
+        </button>
+        <input type="file" id="restore-file-input" accept=".json" class="hidden" />
       </div>
     </aside>
 
@@ -84,9 +89,7 @@
       <!-- TOP BAR -->
       <header id="top-bar">
         <div id="top-bar-left">
-          <button id="mobile-menu-btn" aria-label="Abrir menu" title="Menu">
-            <i data-lucide="menu"></i>
-          </button>
+          <div id="top-bar-greeting">Catavento Financeiro</div>
           <h1 id="view-title">Dashboard</h1>
         </div>
 
@@ -96,7 +99,6 @@
               <i data-lucide="chevron-left"></i>
             </button>
             <button id="month-display" aria-live="polite">
-              <i data-lucide="calendar"></i>
               <span id="month-label">Maio 2026</span>
             </button>
             <button id="month-next" aria-label="Próximo mês">
@@ -106,8 +108,8 @@
         </div>
 
         <div id="top-bar-right">
-          <button id="add-btn" class="btn-primary" aria-label="Adicionar lançamento" title="Adicionar">
-            <i data-lucide="plus"></i>
+          <button id="add-btn" aria-label="Adicionar lançamento" title="Adicionar">
+            <span class="add-icon">+</span>
             <span>Adicionar</span>
           </button>
         </div>
@@ -121,11 +123,24 @@
 
           <!-- Hero saldo -->
           <div id="hero-saldo" class="hero-card">
-            <div class="hero-card-label">Saldo Real</div>
+            <div class="hero-card-label">Saldo Real do Mês</div>
             <div class="hero-card-value" id="hero-saldo-value">R$ 0,00</div>
+            <div class="hero-month-label" id="hero-month-display">Maio 2026</div>
             <div class="hero-card-sub">
-              <span id="hero-saldo-previsto-label">Saldo Previsto:</span>
-              <span id="hero-saldo-previsto-value">R$ 0,00</span>
+              <div class="hero-pill income">
+                <div class="hero-pill-icon"><i data-lucide="arrow-down-left"></i></div>
+                <div>
+                  <div class="hero-pill-label">Receitas</div>
+                  <div class="hero-pill-value" id="hero-pill-income-value">R$ 0,00</div>
+                </div>
+              </div>
+              <div class="hero-pill expense">
+                <div class="hero-pill-icon"><i data-lucide="arrow-up-right"></i></div>
+                <div>
+                  <div class="hero-pill-label">Gastos</div>
+                  <div class="hero-pill-value" id="hero-pill-expense-value">R$ 0,00</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -137,74 +152,74 @@
           <!-- Summary cards grid -->
           <div id="summary-cards" class="summary-cards-grid">
 
-            <div class="summary-card" id="card-total-receber">
+            <div class="summary-card accent-green" id="card-total-receber">
               <div class="summary-card-icon income"><i data-lucide="arrow-down-circle"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Total a Receber</div>
+                <div class="summary-card-label">A Receber</div>
                 <div class="summary-card-value" id="total-receber">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-total-recebido">
+            <div class="summary-card accent-blue" id="card-total-recebido">
               <div class="summary-card-icon income-done"><i data-lucide="check-circle-2"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Total Recebido</div>
+                <div class="summary-card-label">Recebido</div>
                 <div class="summary-card-value" id="total-recebido">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-gastos-fisico">
+            <div class="summary-card accent-blue" id="card-gastos-fisico">
               <div class="summary-card-icon expense"><i data-lucide="building-2"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Gastos Físico</div>
+                <div class="summary-card-label">Físico</div>
                 <div class="summary-card-value" id="gastos-fisico">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-gastos-digital">
+            <div class="summary-card accent-purple" id="card-gastos-digital">
               <div class="summary-card-icon expense-digital"><i data-lucide="monitor"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Gastos Digital</div>
+                <div class="summary-card-label">Digital</div>
                 <div class="summary-card-value" id="gastos-digital">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-total-gastos">
+            <div class="summary-card accent-red" id="card-total-gastos">
               <div class="summary-card-icon danger"><i data-lucide="trending-down"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Total de Gastos</div>
+                <div class="summary-card-label">Total Gastos</div>
                 <div class="summary-card-value" id="total-gastos">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-valor-pago">
+            <div class="summary-card accent-green" id="card-valor-pago">
               <div class="summary-card-icon success"><i data-lucide="circle-check"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Valor Pago</div>
+                <div class="summary-card-label">Pago</div>
                 <div class="summary-card-value" id="valor-pago">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-valor-pendente">
+            <div class="summary-card accent-yellow" id="card-valor-pendente">
               <div class="summary-card-icon warning"><i data-lucide="clock"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Valor Pendente</div>
+                <div class="summary-card-label">Pendente</div>
                 <div class="summary-card-value" id="valor-pendente">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-valor-atrasado">
+            <div class="summary-card accent-red" id="card-valor-atrasado">
               <div class="summary-card-icon danger"><i data-lucide="alert-triangle"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Valor Atrasado</div>
+                <div class="summary-card-label">Atrasado</div>
                 <div class="summary-card-value" id="valor-atrasado">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-saldo-previsto">
+            <div class="summary-card accent-primary" id="card-saldo-previsto">
               <div class="summary-card-icon neutral"><i data-lucide="bar-chart-2"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Saldo Previsto</div>
+                <div class="summary-card-label">Prev. Mês</div>
                 <div class="summary-card-value" id="saldo-previsto">R$ 0,00</div>
               </div>
             </div>
@@ -288,40 +303,21 @@
           <div class="filter-bar" id="filter-bar-fisico">
             <div class="filter-search">
               <i data-lucide="search"></i>
-              <input
-                type="search"
-                id="search-fisico"
-                class="filter-input"
-                placeholder="Buscar lançamento..."
-                aria-label="Buscar lançamento físico"
-              />
+              <input type="search" id="search-fisico" class="filter-input" placeholder="Buscar lançamento..." aria-label="Buscar lançamento físico" />
             </div>
+            <button class="btn-filter" id="btn-filter-fisico" aria-label="Abrir filtros">
+              <i data-lucide="sliders-horizontal"></i>
+              <span>Filtros</span>
+            </button>
             <div class="filter-selects">
-              <select id="filter-fisico-mes" class="filter-select" aria-label="Filtrar por mês">
-                <option value="">Todos os meses</option>
-              </select>
-              <select id="filter-fisico-categoria" class="filter-select" aria-label="Filtrar por categoria">
-                <option value="">Categoria</option>
-              </select>
-              <select id="filter-fisico-status" class="filter-select" aria-label="Filtrar por status">
-                <option value="">Status</option>
-                <option value="pago">Pago</option>
-                <option value="pendente">Pendente</option>
-                <option value="atrasado">Atrasado</option>
-              </select>
-              <select id="filter-fisico-conta" class="filter-select" aria-label="Filtrar por conta">
-                <option value="">Conta</option>
-              </select>
-              <select id="filter-fisico-tipo" class="filter-select" aria-label="Filtrar por tipo">
-                <option value="">Tipo</option>
-                <option value="fixo">Fixo</option>
-                <option value="variavel">Variável</option>
-              </select>
+              <select id="filter-fisico-mes" class="filter-select" aria-label="Mês"><option value="">Todos os meses</option></select>
+              <select id="filter-fisico-categoria" class="filter-select" aria-label="Categoria"><option value="">Categoria</option></select>
+              <select id="filter-fisico-status" class="filter-select" aria-label="Status"><option value="">Status</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="atrasado">Atrasado</option></select>
+              <select id="filter-fisico-conta" class="filter-select" aria-label="Conta"><option value="">Conta</option></select>
+              <select id="filter-fisico-tipo" class="filter-select" aria-label="Tipo"><option value="">Tipo</option><option value="fixo">Fixo</option><option value="variavel">Variável</option></select>
             </div>
             <div class="filter-actions">
-              <button class="btn-icon" id="clear-filters-fisico" title="Limpar filtros" aria-label="Limpar filtros físico">
-                <i data-lucide="x-circle"></i>
-              </button>
+              <button class="btn-icon" id="clear-filters-fisico" title="Limpar filtros"><i data-lucide="x-circle"></i></button>
             </div>
           </div>
 
@@ -386,40 +382,21 @@
           <div class="filter-bar" id="filter-bar-digital">
             <div class="filter-search">
               <i data-lucide="search"></i>
-              <input
-                type="search"
-                id="search-digital"
-                class="filter-input"
-                placeholder="Buscar lançamento..."
-                aria-label="Buscar lançamento digital"
-              />
+              <input type="search" id="search-digital" class="filter-input" placeholder="Buscar lançamento..." aria-label="Buscar lançamento digital" />
             </div>
+            <button class="btn-filter" id="btn-filter-digital" aria-label="Abrir filtros">
+              <i data-lucide="sliders-horizontal"></i>
+              <span>Filtros</span>
+            </button>
             <div class="filter-selects">
-              <select id="filter-digital-mes" class="filter-select" aria-label="Filtrar por mês">
-                <option value="">Todos os meses</option>
-              </select>
-              <select id="filter-digital-categoria" class="filter-select" aria-label="Filtrar por categoria">
-                <option value="">Categoria</option>
-              </select>
-              <select id="filter-digital-status" class="filter-select" aria-label="Filtrar por status">
-                <option value="">Status</option>
-                <option value="pago">Pago</option>
-                <option value="pendente">Pendente</option>
-                <option value="atrasado">Atrasado</option>
-              </select>
-              <select id="filter-digital-conta" class="filter-select" aria-label="Filtrar por conta">
-                <option value="">Conta</option>
-              </select>
-              <select id="filter-digital-tipo" class="filter-select" aria-label="Filtrar por tipo">
-                <option value="">Tipo</option>
-                <option value="fixo">Fixo</option>
-                <option value="variavel">Variável</option>
-              </select>
+              <select id="filter-digital-mes" class="filter-select" aria-label="Mês"><option value="">Todos os meses</option></select>
+              <select id="filter-digital-categoria" class="filter-select" aria-label="Categoria"><option value="">Categoria</option></select>
+              <select id="filter-digital-status" class="filter-select" aria-label="Status"><option value="">Status</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="atrasado">Atrasado</option></select>
+              <select id="filter-digital-conta" class="filter-select" aria-label="Conta"><option value="">Conta</option></select>
+              <select id="filter-digital-tipo" class="filter-select" aria-label="Tipo"><option value="">Tipo</option><option value="fixo">Fixo</option><option value="variavel">Variável</option></select>
             </div>
             <div class="filter-actions">
-              <button class="btn-icon" id="clear-filters-digital" title="Limpar filtros" aria-label="Limpar filtros digital">
-                <i data-lucide="x-circle"></i>
-              </button>
+              <button class="btn-icon" id="clear-filters-digital" title="Limpar filtros"><i data-lucide="x-circle"></i></button>
             </div>
           </div>
 
@@ -472,32 +449,19 @@
           <div class="filter-bar" id="filter-bar-receitas">
             <div class="filter-search">
               <i data-lucide="search"></i>
-              <input
-                type="search"
-                id="search-receitas"
-                class="filter-input"
-                placeholder="Buscar receita..."
-                aria-label="Buscar receita"
-              />
+              <input type="search" id="search-receitas" class="filter-input" placeholder="Buscar receita..." aria-label="Buscar receita" />
             </div>
+            <button class="btn-filter" id="btn-filter-receitas" aria-label="Abrir filtros">
+              <i data-lucide="sliders-horizontal"></i>
+              <span>Filtros</span>
+            </button>
             <div class="filter-selects">
-              <select id="filter-receitas-mes" class="filter-select" aria-label="Filtrar por mês">
-                <option value="">Todos os meses</option>
-              </select>
-              <select id="filter-receitas-categoria" class="filter-select" aria-label="Filtrar por categoria">
-                <option value="">Categoria</option>
-              </select>
-              <select id="filter-receitas-status" class="filter-select" aria-label="Filtrar por status">
-                <option value="">Status</option>
-                <option value="recebido">Recebido</option>
-                <option value="pendente">Pendente</option>
-                <option value="atrasado">Atrasado</option>
-              </select>
+              <select id="filter-receitas-mes" class="filter-select" aria-label="Mês"><option value="">Todos os meses</option></select>
+              <select id="filter-receitas-categoria" class="filter-select" aria-label="Categoria"><option value="">Categoria</option></select>
+              <select id="filter-receitas-status" class="filter-select" aria-label="Status"><option value="">Status</option><option value="recebido">Recebido</option><option value="pendente">Pendente</option></select>
             </div>
             <div class="filter-actions">
-              <button class="btn-icon" id="clear-filters-receitas" title="Limpar filtros" aria-label="Limpar filtros receitas">
-                <i data-lucide="x-circle"></i>
-              </button>
+              <button class="btn-icon" id="clear-filters-receitas" title="Limpar filtros"><i data-lucide="x-circle"></i></button>
             </div>
           </div>
 
@@ -517,6 +481,50 @@
 
         </section>
 
+        <!-- ========== VIEW: CHECKLIST (A Pagar) ========== -->
+        <section id="view-checklist" class="view hidden" data-title="A Pagar">
+
+          <!-- Resumo rápido -->
+          <div id="checklist-summary" class="checklist-summary">
+            <div class="checklist-summary-item danger">
+              <div class="checklist-summary-label">Atrasados</div>
+              <div class="checklist-summary-value" id="checklist-total-atrasado">R$ 0,00</div>
+              <div class="checklist-summary-count" id="checklist-count-atrasado">0 conta(s)</div>
+            </div>
+            <div class="checklist-summary-item warning">
+              <div class="checklist-summary-label">Pendentes</div>
+              <div class="checklist-summary-value" id="checklist-total-pendente">R$ 0,00</div>
+              <div class="checklist-summary-count" id="checklist-count-pendente">0 conta(s)</div>
+            </div>
+            <div class="checklist-summary-item primary">
+              <div class="checklist-summary-label">Total a pagar</div>
+              <div class="checklist-summary-value" id="checklist-total-geral">R$ 0,00</div>
+              <div class="checklist-summary-count" id="checklist-count-geral">0 conta(s)</div>
+            </div>
+          </div>
+
+          <!-- Filtro de área -->
+          <div class="checklist-filter-row">
+            <button class="checklist-area-btn active" data-area="">Todos</button>
+            <button class="checklist-area-btn" data-area="fisico">
+              <i data-lucide="building-2"></i> Físico
+            </button>
+            <button class="checklist-area-btn" data-area="digital">
+              <i data-lucide="monitor"></i> Digital
+            </button>
+          </div>
+
+          <!-- Lista de checklist -->
+          <div id="checklist-list"></div>
+
+          <div id="checklist-empty" class="empty-state hidden">
+            <i data-lucide="party-popper"></i>
+            <p>Tudo em dia!</p>
+            <span class="empty-hint">Nenhuma conta pendente ou atrasada neste mês.</span>
+          </div>
+
+        </section>
+
       </main>
     </div>
   </div>
@@ -524,20 +532,24 @@
   <!-- ===================== BOTTOM NAV (mobile) ===================== -->
   <nav id="bottom-nav" aria-label="Navegação mobile">
     <button class="bottom-nav-item active" data-view="dashboard" title="Dashboard" aria-current="page">
-      <i data-lucide="layout-dashboard"></i>
-      <span>Dashboard</span>
+      <div class="nav-icon-wrap"><i data-lucide="layout-dashboard"></i></div>
+      <span>Início</span>
     </button>
     <button class="bottom-nav-item" data-view="fisico" title="Físico">
-      <i data-lucide="building-2"></i>
+      <div class="nav-icon-wrap"><i data-lucide="building-2"></i></div>
       <span>Físico</span>
     </button>
     <button class="bottom-nav-item" data-view="digital" title="Digital">
-      <i data-lucide="monitor"></i>
+      <div class="nav-icon-wrap"><i data-lucide="monitor"></i></div>
       <span>Digital</span>
     </button>
     <button class="bottom-nav-item" data-view="receitas" title="Receitas">
-      <i data-lucide="trending-up"></i>
+      <div class="nav-icon-wrap"><i data-lucide="trending-up"></i></div>
       <span>Receitas</span>
+    </button>
+    <button class="bottom-nav-item" data-view="checklist" title="A Pagar">
+      <div class="nav-icon-wrap"><i data-lucide="circle-check-big"></i></div>
+      <span>A Pagar</span>
     </button>
   </nav>
 
@@ -612,6 +624,23 @@
 
       </div>
 
+    </div>
+  </div>
+
+  <!-- ===================== FILTER PANEL (mobile bottom sheet) ===================== -->
+  <div id="filter-panel-overlay"></div>
+  <div id="filter-panel" role="dialog" aria-label="Filtros">
+    <div class="filter-panel-handle"></div>
+    <div class="filter-panel-header">
+      <span class="filter-panel-title">Filtros</span>
+      <button class="btn-icon" id="filter-panel-close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="filter-panel-body" id="filter-panel-body">
+      <!-- Populated dynamically by JS based on current view -->
+    </div>
+    <div class="filter-panel-footer">
+      <button class="btn btn-ghost btn-sm" id="filter-panel-clear" style="flex:1">Limpar tudo</button>
+      <button class="btn btn-primary btn-sm" id="filter-panel-apply" style="flex:2">Aplicar filtros</button>
     </div>
   </div>
 

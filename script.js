@@ -254,6 +254,8 @@ function populateFilterMonths() {
 function updateMonthDisplay() {
   const monthLabel = document.getElementById('month-label');
   if (monthLabel) monthLabel.textContent = formatMonthLabel(state.currentMonth);
+  const heroMonth = document.getElementById('hero-month-display');
+  if (heroMonth) heroMonth.textContent = formatMonthLabel(state.currentMonth);
 }
 
 // ─────────────────────────────────────────────
@@ -319,11 +321,16 @@ function renderDashboard() {
   const heroVal = document.getElementById('hero-saldo-value');
   if (heroVal) {
     heroVal.textContent = formatBRL(saldoReal);
-    heroVal.className = 'hero-card-value';
-    heroVal.classList.add(saldoReal >= 0 ? 'text-success' : 'text-danger');
+    heroVal.className = 'hero-card-value' + (saldoReal >= 0 ? ' positive' : ' negative');
   }
   const heroPrevisto = document.getElementById('hero-saldo-previsto-value');
   if (heroPrevisto) heroPrevisto.textContent = formatBRL(saldoPrevisto);
+
+  // Hero pills (receitas / gastos)
+  const pillIncome  = document.getElementById('hero-pill-income-value');
+  const pillExpense = document.getElementById('hero-pill-expense-value');
+  if (pillIncome)  pillIncome.textContent  = formatBRL(totalReceber);
+  if (pillExpense) pillExpense.textContent = formatBRL(totalGastos);
 
   // Summary cards — map to inner value spans
   const cardMap = {
@@ -821,10 +828,13 @@ function renderList(listId, emptyId, items, type) {
   }
 
   if (empty) empty.classList.add('hidden');
-  // Sort by dataVencimento ascending
   const sorted = [...items].sort((a, b) => (a.dataVencimento || '').localeCompare(b.dataVencimento || ''));
-  list.innerHTML = sorted.map(item => renderLancamentoItem(item, type)).join('');
+  // Header + rows inside the card container
+  list.innerHTML =
+    `<div class="tx-list-header"><span class="tx-list-title">Lançamentos</span><span class="tx-list-count">${sorted.length} item${sorted.length !== 1 ? 's' : ''}</span></div>` +
+    sorted.map(item => renderLancamentoItem(item, type)).join('');
   if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [list] });
+  setupTxExpandListeners(list);
 }
 
 function renderListReceitas(listId, emptyId, items) {
@@ -840,80 +850,124 @@ function renderListReceitas(listId, emptyId, items) {
 
   if (empty) empty.classList.add('hidden');
   const sorted = [...items].sort((a, b) => (a.data || '').localeCompare(b.data || ''));
-  list.innerHTML = sorted.map(item => renderReceitaItem(item)).join('');
+  list.innerHTML =
+    `<div class="tx-list-header"><span class="tx-list-title">Receitas</span><span class="tx-list-count">${sorted.length} item${sorted.length !== 1 ? 's' : ''}</span></div>` +
+    sorted.map(item => renderReceitaItem(item)).join('');
   if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [list] });
+  setupTxExpandListeners(list);
+}
+
+// Tap on item row → toggle action buttons
+function setupTxExpandListeners(container) {
+  container.querySelectorAll('.lancamento-item').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Don't toggle if clicking an action button
+      if (e.target.closest('.btn-action') || e.target.closest('button')) return;
+      const id      = row.dataset.id;
+      const actions = document.getElementById(`tx-actions-${id}`);
+      if (!actions) return;
+      const isOpen = actions.classList.contains('visible');
+      // Close all others
+      container.querySelectorAll('.lancamento-item-actions.visible').forEach(a => a.classList.remove('visible'));
+      container.querySelectorAll('.lancamento-item.expanded').forEach(r => r.classList.remove('expanded'));
+      if (!isOpen) {
+        actions.classList.add('visible');
+        row.classList.add('expanded');
+      }
+    });
+  });
+}
+
+// Category → gradient index map
+const CATEGORY_GRAD = {
+  'Aluguel':0,'Água':2,'Luz/Energia':10,'Internet':3,'Contabilidade':11,
+  'Salários':3,'Impostos':1,'Empréstimos':4,'Material pedagógico':9,
+  'Compras para o espaço':6,'Manutenção':7,'Móveis e equipamentos':8,
+  'Presentes e datas comemorativas':4,'Comissões':5,'Outros gastos físicos':11,
+  'Mentorias':5,'Ferramentas digitais':2,'WhatsApp/Z-API':3,'Inteligência Artificial':0,
+  'Hospedagem de site':8,'Armazenamento em nuvem':2,'Instagram profissional':1,
+  'Plataformas digitais':5,'Automações':6,'Tráfego pago':10,'Domínio':11,
+  'Design/Edição':4,'Assinaturas digitais':7,'Outros gastos digitais':8,
+};
+
+function categoryGradClass(categoria) {
+  const idx = CATEGORY_GRAD[categoria] ?? 11;
+  return `icon-grad-${idx}`;
+}
+
+function categoryInitial(descricao) {
+  return (descricao || '?').charAt(0).toUpperCase();
 }
 
 function renderLancamentoItem(item, type) {
-  const iconClass = type === 'fisico' ? 'item-icon-fisico' : 'item-icon-digital';
-  const iconName  = type === 'fisico' ? 'building-2' : 'monitor';
-  const pagarLabel = item.status !== 'pago' ? `<button class="btn-action btn-action-pagar btn-marcar-pago" data-id="${item.id}" data-type="${type}"><i data-lucide="check"></i> Pagar</button>` : `<button class="btn-action" style="background:#F9FAFB;color:#9CA3AF" disabled>✓ Pago</button>`;
+  const grad     = categoryGradClass(item.categoria);
+  const initial  = categoryInitial(item.descricao);
+  const isPago   = item.status === 'pago';
+  const today    = todayStr();
+  const diff     = item.dataVencimento
+    ? Math.round((new Date(item.dataVencimento + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000)
+    : null;
+  const dateLabel = diff === null ? formatDate(item.dataVencimento)
+    : item.status === 'atrasado' ? `${Math.abs(diff)}d atrasado`
+    : diff === 0 ? 'Vence hoje'
+    : diff === 1 ? 'Vence amanhã'
+    : `Vence em ${diff}d`;
+  const dateClass = item.status === 'atrasado' ? 'overdue' : '';
+
+  const subParts = [item.categoria, item.conta].filter(Boolean);
+  const subLine  = subParts.join(' · ');
+
+  const pagarBtn = !isPago
+    ? `<button class="btn-action btn-action-pagar btn-marcar-pago" data-id="${item.id}" data-type="${type}"><i data-lucide="check"></i> Pagar</button>`
+    : `<button class="btn-action" style="background:#F9FAFB;color:#9CA3AF;cursor:default" disabled>✓ Pago</button>`;
 
   return `
     <div class="lancamento-item status-${item.status}" data-id="${item.id}" data-type="${type}" role="listitem">
-      <div class="lancamento-item-inner">
-        <div class="lancamento-item-icon ${iconClass}">
-          <i data-lucide="${iconName}"></i>
-        </div>
-        <div class="lancamento-item-body">
-          <div class="lancamento-item-title">${escapeHtml(item.descricao)}</div>
-          <div class="lancamento-item-meta">
-            <span><i data-lucide="calendar"></i>${formatDate(item.dataVencimento)}</span>
-            ${item.categoria ? `<span>${escapeHtml(item.categoria)}</span>` : ''}
-            ${item.conta ? `<span><i data-lucide="credit-card"></i>${escapeHtml(item.conta)}</span>` : ''}
-          </div>
-        </div>
-        <div class="lancamento-item-right">
-          <div class="lancamento-item-value">${formatBRL(item.valor)}</div>
-          <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
-        </div>
+      <div class="lancamento-item-icon ${grad}">${initial}</div>
+      <div class="lancamento-item-body">
+        <div class="lancamento-item-title">${escapeHtml(item.descricao)}</div>
+        <div class="lancamento-item-sub">${escapeHtml(subLine)}</div>
       </div>
-      <div class="lancamento-item-tags">
-        ${item.tipoGasto ? `<span class="item-tag tag-${item.tipoGasto}">${item.tipoGasto === 'fixo' ? 'Fixo' : 'Variável'}</span>` : ''}
-        ${item.recorrente ? `<span class="item-tag tag-recorrente">↻ Recorrente</span>` : ''}
+      <div class="lancamento-item-right">
+        <div class="lancamento-item-value ${isPago ? 'paid' : 'expense'}">-${formatBRL(item.valor)}</div>
+        <div class="lancamento-item-date ${dateClass}">${dateLabel}</div>
       </div>
-      <div class="lancamento-item-actions">
-        ${pagarLabel}
-        <button class="btn-action btn-action-editar btn-edit" data-id="${item.id}" data-type="${type}"><i data-lucide="pencil"></i> Editar</button>
-        <button class="btn-action btn-action-duplicar btn-duplicate" data-id="${item.id}" data-type="${type}"><i data-lucide="copy"></i></button>
-        <button class="btn-action btn-action-excluir btn-delete" data-id="${item.id}" data-type="${type}"><i data-lucide="trash-2"></i></button>
-      </div>
+    </div>
+    <div class="lancamento-item-actions" id="tx-actions-${item.id}">
+      ${pagarBtn}
+      <button class="btn-action btn-action-editar btn-edit" data-id="${item.id}" data-type="${type}"><i data-lucide="pencil"></i> Editar</button>
+      <button class="btn-action btn-action-duplicar btn-duplicate" data-id="${item.id}" data-type="${type}"><i data-lucide="copy"></i></button>
+      <button class="btn-action btn-action-excluir btn-delete" data-id="${item.id}" data-type="${type}"><i data-lucide="trash-2"></i></button>
     </div>`;
 }
 
 function renderReceitaItem(item) {
-  const receberLabel = item.status !== 'recebido'
+  const initial = categoryInitial(item.descricao);
+  const isRecebido = item.status === 'recebido';
+
+  const receberBtn = !isRecebido
     ? `<button class="btn-action btn-action-pagar btn-marcar-pago" data-id="${item.id}" data-type="receita"><i data-lucide="check"></i> Receber</button>`
-    : `<button class="btn-action" style="background:#F9FAFB;color:#9CA3AF" disabled>✓ Recebido</button>`;
+    : `<button class="btn-action" style="background:#F9FAFB;color:#9CA3AF;cursor:default" disabled>✓ Recebido</button>`;
+
+  const subLine = [formatDate(item.data), item.valorRecebido ? `Recebido ${formatBRL(item.valorRecebido)}` : ''].filter(Boolean).join(' · ');
 
   return `
     <div class="lancamento-item status-${item.status}" data-id="${item.id}" data-type="receita" role="listitem">
-      <div class="lancamento-item-inner">
-        <div class="lancamento-item-icon item-icon-receita">
-          <i data-lucide="trending-up"></i>
-        </div>
-        <div class="lancamento-item-body">
-          <div class="lancamento-item-title">${escapeHtml(item.descricao)}</div>
-          <div class="lancamento-item-meta">
-            <span><i data-lucide="calendar"></i>${formatDate(item.data)}</span>
-            <span>Previsto: ${formatBRL(item.valorPrevisto)}</span>
-            ${item.valorRecebido ? `<span>Recebido: ${formatBRL(item.valorRecebido)}</span>` : ''}
-          </div>
-        </div>
-        <div class="lancamento-item-right">
-          <div class="lancamento-item-value receita-value">${formatBRL(item.valorPrevisto)}</div>
-          <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
-        </div>
+      <div class="lancamento-item-icon icon-grad-receita">${initial}</div>
+      <div class="lancamento-item-body">
+        <div class="lancamento-item-title">${escapeHtml(item.descricao)}</div>
+        <div class="lancamento-item-sub">${escapeHtml(subLine)}</div>
       </div>
-      <div class="lancamento-item-tags">
-        ${item.recorrente ? `<span class="item-tag tag-recorrente">↻ Recorrente</span>` : ''}
+      <div class="lancamento-item-right">
+        <div class="lancamento-item-value income">+${formatBRL(item.valorPrevisto)}</div>
+        <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
       </div>
-      <div class="lancamento-item-actions">
-        ${receberLabel}
-        <button class="btn-action btn-action-editar btn-edit" data-id="${item.id}" data-type="receita"><i data-lucide="pencil"></i> Editar</button>
-        <button class="btn-action btn-action-duplicar btn-duplicate" data-id="${item.id}" data-type="receita"><i data-lucide="copy"></i></button>
-        <button class="btn-action btn-action-excluir btn-delete" data-id="${item.id}" data-type="receita"><i data-lucide="trash-2"></i></button>
-      </div>
+    </div>
+    <div class="lancamento-item-actions" id="tx-actions-${item.id}">
+      ${receberBtn}
+      <button class="btn-action btn-action-editar btn-edit" data-id="${item.id}" data-type="receita"><i data-lucide="pencil"></i> Editar</button>
+      <button class="btn-action btn-action-duplicar btn-duplicate" data-id="${item.id}" data-type="receita"><i data-lucide="copy"></i></button>
+      <button class="btn-action btn-action-excluir btn-delete" data-id="${item.id}" data-type="receita"><i data-lucide="trash-2"></i></button>
     </div>`;
 }
 

@@ -123,11 +123,24 @@
 
           <!-- Hero saldo -->
           <div id="hero-saldo" class="hero-card">
-            <div class="hero-card-label">Saldo Real</div>
+            <div class="hero-card-label">Saldo Real do Mês</div>
             <div class="hero-card-value" id="hero-saldo-value">R$ 0,00</div>
+            <div class="hero-month-label" id="hero-month-display">Maio 2026</div>
             <div class="hero-card-sub">
-              <span id="hero-saldo-previsto-label">Saldo Previsto:</span>
-              <span id="hero-saldo-previsto-value">R$ 0,00</span>
+              <div class="hero-pill income">
+                <div class="hero-pill-icon"><i data-lucide="arrow-down-left"></i></div>
+                <div>
+                  <div class="hero-pill-label">Receitas</div>
+                  <div class="hero-pill-value" id="hero-pill-income-value">R$ 0,00</div>
+                </div>
+              </div>
+              <div class="hero-pill expense">
+                <div class="hero-pill-icon"><i data-lucide="arrow-up-right"></i></div>
+                <div>
+                  <div class="hero-pill-label">Gastos</div>
+                  <div class="hero-pill-value" id="hero-pill-expense-value">R$ 0,00</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -139,74 +152,74 @@
           <!-- Summary cards grid -->
           <div id="summary-cards" class="summary-cards-grid">
 
-            <div class="summary-card" id="card-total-receber">
+            <div class="summary-card accent-green" id="card-total-receber">
               <div class="summary-card-icon income"><i data-lucide="arrow-down-circle"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Total a Receber</div>
+                <div class="summary-card-label">A Receber</div>
                 <div class="summary-card-value" id="total-receber">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-total-recebido">
+            <div class="summary-card accent-blue" id="card-total-recebido">
               <div class="summary-card-icon income-done"><i data-lucide="check-circle-2"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Total Recebido</div>
+                <div class="summary-card-label">Recebido</div>
                 <div class="summary-card-value" id="total-recebido">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-gastos-fisico">
+            <div class="summary-card accent-blue" id="card-gastos-fisico">
               <div class="summary-card-icon expense"><i data-lucide="building-2"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Gastos Físico</div>
+                <div class="summary-card-label">Físico</div>
                 <div class="summary-card-value" id="gastos-fisico">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-gastos-digital">
+            <div class="summary-card accent-purple" id="card-gastos-digital">
               <div class="summary-card-icon expense-digital"><i data-lucide="monitor"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Gastos Digital</div>
+                <div class="summary-card-label">Digital</div>
                 <div class="summary-card-value" id="gastos-digital">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-total-gastos">
+            <div class="summary-card accent-red" id="card-total-gastos">
               <div class="summary-card-icon danger"><i data-lucide="trending-down"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Total de Gastos</div>
+                <div class="summary-card-label">Total Gastos</div>
                 <div class="summary-card-value" id="total-gastos">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-valor-pago">
+            <div class="summary-card accent-green" id="card-valor-pago">
               <div class="summary-card-icon success"><i data-lucide="circle-check"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Valor Pago</div>
+                <div class="summary-card-label">Pago</div>
                 <div class="summary-card-value" id="valor-pago">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-valor-pendente">
+            <div class="summary-card accent-yellow" id="card-valor-pendente">
               <div class="summary-card-icon warning"><i data-lucide="clock"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Valor Pendente</div>
+                <div class="summary-card-label">Pendente</div>
                 <div class="summary-card-value" id="valor-pendente">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-valor-atrasado">
+            <div class="summary-card accent-red" id="card-valor-atrasado">
               <div class="summary-card-icon danger"><i data-lucide="alert-triangle"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Valor Atrasado</div>
+                <div class="summary-card-label">Atrasado</div>
                 <div class="summary-card-value" id="valor-atrasado">R$ 0,00</div>
               </div>
             </div>
 
-            <div class="summary-card" id="card-saldo-previsto">
+            <div class="summary-card accent-primary" id="card-saldo-previsto">
               <div class="summary-card-icon neutral"><i data-lucide="bar-chart-2"></i></div>
               <div class="summary-card-body">
-                <div class="summary-card-label">Saldo Previsto</div>
+                <div class="summary-card-label">Prev. Mês</div>
                 <div class="summary-card-value" id="saldo-previsto">R$ 0,00</div>
               </div>
             </div>

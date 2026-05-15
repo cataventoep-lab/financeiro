@@ -732,62 +732,74 @@ function renderListReceitas(listId, emptyId, items) {
 }
 
 function renderLancamentoItem(item, type) {
-  const marcarBtn = item.status !== 'pago'
-    ? `<button class="btn btn-sm btn-success btn-marcar-pago" title="Marcar como pago" data-id="${item.id}" data-type="${type}">✓ Pagar</button>`
-    : '';
+  const iconClass = type === 'fisico' ? 'item-icon-fisico' : 'item-icon-digital';
+  const iconName  = type === 'fisico' ? 'building-2' : 'monitor';
+  const pagarLabel = item.status !== 'pago' ? `<button class="btn-action btn-action-pagar btn-marcar-pago" data-id="${item.id}" data-type="${type}"><i data-lucide="check"></i> Pagar</button>` : `<button class="btn-action" style="background:#F9FAFB;color:#9CA3AF" disabled>✓ Pago</button>`;
 
   return `
-    <div class="lancamento-item" data-id="${item.id}" data-type="${type}" role="listitem">
-      <div class="status-bar status-${item.status}"></div>
-      <div class="item-body">
-        <div class="item-title">${escapeHtml(item.descricao)}</div>
-        <div class="item-meta">
-          <span>${formatDate(item.dataVencimento)}</span>
-          ${item.categoria ? `<span>${escapeHtml(item.categoria)}</span>` : ''}
-          ${item.conta ? `<span>${escapeHtml(item.conta)}</span>` : ''}
-          ${item.tipoGasto ? `<span class="badge-tipo badge-${item.tipoGasto}">${item.tipoGasto === 'fixo' ? 'Fixo' : 'Variável'}</span>` : ''}
-          ${item.recorrente ? `<span class="badge-recorrente">↻ Recorrente</span>` : ''}
+    <div class="lancamento-item status-${item.status}" data-id="${item.id}" data-type="${type}" role="listitem">
+      <div class="lancamento-item-inner">
+        <div class="lancamento-item-icon ${iconClass}">
+          <i data-lucide="${iconName}"></i>
+        </div>
+        <div class="lancamento-item-body">
+          <div class="lancamento-item-title">${escapeHtml(item.descricao)}</div>
+          <div class="lancamento-item-meta">
+            <span><i data-lucide="calendar"></i>${formatDate(item.dataVencimento)}</span>
+            ${item.categoria ? `<span>${escapeHtml(item.categoria)}</span>` : ''}
+            ${item.conta ? `<span><i data-lucide="credit-card"></i>${escapeHtml(item.conta)}</span>` : ''}
+          </div>
+        </div>
+        <div class="lancamento-item-right">
+          <div class="lancamento-item-value">${formatBRL(item.valor)}</div>
+          <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
         </div>
       </div>
-      <div class="item-right">
-        <div class="item-value">${formatBRL(item.valor)}</div>
-        <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
+      <div class="lancamento-item-tags">
+        ${item.tipoGasto ? `<span class="item-tag tag-${item.tipoGasto}">${item.tipoGasto === 'fixo' ? 'Fixo' : 'Variável'}</span>` : ''}
+        ${item.recorrente ? `<span class="item-tag tag-recorrente">↻ Recorrente</span>` : ''}
       </div>
-      <div class="item-actions">
-        ${marcarBtn}
-        <button class="btn-icon btn-edit" title="Editar" data-id="${item.id}" data-type="${type}">✏️</button>
-        <button class="btn-icon btn-duplicate" title="Duplicar" data-id="${item.id}" data-type="${type}">📋</button>
-        <button class="btn-icon btn-delete" title="Excluir" data-id="${item.id}" data-type="${type}">🗑️</button>
+      <div class="lancamento-item-actions">
+        ${pagarLabel}
+        <button class="btn-action btn-action-editar btn-edit" data-id="${item.id}" data-type="${type}"><i data-lucide="pencil"></i> Editar</button>
+        <button class="btn-action btn-action-duplicar btn-duplicate" data-id="${item.id}" data-type="${type}"><i data-lucide="copy"></i></button>
+        <button class="btn-action btn-action-excluir btn-delete" data-id="${item.id}" data-type="${type}"><i data-lucide="trash-2"></i></button>
       </div>
     </div>`;
 }
 
 function renderReceitaItem(item) {
-  const marcarBtn = item.status !== 'recebido'
-    ? `<button class="btn btn-sm btn-success btn-marcar-pago" title="Marcar como recebido" data-id="${item.id}" data-type="receita">✓ Receber</button>`
-    : '';
+  const receberLabel = item.status !== 'recebido'
+    ? `<button class="btn-action btn-action-pagar btn-marcar-pago" data-id="${item.id}" data-type="receita"><i data-lucide="check"></i> Receber</button>`
+    : `<button class="btn-action" style="background:#F9FAFB;color:#9CA3AF" disabled>✓ Recebido</button>`;
 
   return `
-    <div class="lancamento-item" data-id="${item.id}" data-type="receita" role="listitem">
-      <div class="status-bar status-${item.status}"></div>
-      <div class="item-body">
-        <div class="item-title">${escapeHtml(item.descricao)}</div>
-        <div class="item-meta">
-          <span>${formatDate(item.data)}</span>
-          <span>Previsto: ${formatBRL(item.valorPrevisto)}</span>
-          ${item.valorRecebido ? `<span>Recebido: ${formatBRL(item.valorRecebido)}</span>` : ''}
-          ${item.recorrente ? `<span class="badge-recorrente">↻ Recorrente</span>` : ''}
+    <div class="lancamento-item status-${item.status}" data-id="${item.id}" data-type="receita" role="listitem">
+      <div class="lancamento-item-inner">
+        <div class="lancamento-item-icon item-icon-receita">
+          <i data-lucide="trending-up"></i>
+        </div>
+        <div class="lancamento-item-body">
+          <div class="lancamento-item-title">${escapeHtml(item.descricao)}</div>
+          <div class="lancamento-item-meta">
+            <span><i data-lucide="calendar"></i>${formatDate(item.data)}</span>
+            <span>Previsto: ${formatBRL(item.valorPrevisto)}</span>
+            ${item.valorRecebido ? `<span>Recebido: ${formatBRL(item.valorRecebido)}</span>` : ''}
+          </div>
+        </div>
+        <div class="lancamento-item-right">
+          <div class="lancamento-item-value receita-value">${formatBRL(item.valorPrevisto)}</div>
+          <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
         </div>
       </div>
-      <div class="item-right">
-        <div class="item-value">${formatBRL(item.valorPrevisto)}</div>
-        <span class="status-badge status-${item.status}">${statusLabel(item.status)}</span>
+      <div class="lancamento-item-tags">
+        ${item.recorrente ? `<span class="item-tag tag-recorrente">↻ Recorrente</span>` : ''}
       </div>
-      <div class="item-actions">
-        ${marcarBtn}
-        <button class="btn-icon btn-edit" title="Editar" data-id="${item.id}" data-type="receita">✏️</button>
-        <button class="btn-icon btn-duplicate" title="Duplicar" data-id="${item.id}" data-type="receita">📋</button>
-        <button class="btn-icon btn-delete" title="Excluir" data-id="${item.id}" data-type="receita">🗑️</button>
+      <div class="lancamento-item-actions">
+        ${receberLabel}
+        <button class="btn-action btn-action-editar btn-edit" data-id="${item.id}" data-type="receita"><i data-lucide="pencil"></i> Editar</button>
+        <button class="btn-action btn-action-duplicar btn-duplicate" data-id="${item.id}" data-type="receita"><i data-lucide="copy"></i></button>
+        <button class="btn-action btn-action-excluir btn-delete" data-id="${item.id}" data-type="receita"><i data-lucide="trash-2"></i></button>
       </div>
     </div>`;
 }
@@ -1634,30 +1646,165 @@ function setupEventListeners() {
   setupListDelegation('lista-digital');
   setupListDelegation('lista-receitas');
 
-  // Mobile menu toggle (sidebar)
-  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const sidebar = document.getElementById('sidebar');
-  if (mobileMenuBtn && sidebar) {
-    mobileMenuBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('sidebar-open');
-    });
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-      if (sidebar.classList.contains('sidebar-open') &&
-          !sidebar.contains(e.target) &&
-          e.target !== mobileMenuBtn) {
-        sidebar.classList.remove('sidebar-open');
-      }
-    });
-  }
+  // Filter panel (mobile bottom sheet)
+  setupFilterPanel();
+
+  // "Mais" menu (mobile)
+  setupMaisMenu();
 
   // Keyboard close modal
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const overlay = document.getElementById('modal-overlay');
       if (overlay && !overlay.classList.contains('hidden')) closeModal();
+      closeFilterPanel();
+      closeMaisMenu();
     }
   });
+}
+
+// ─────────────────────────────────────────────
+// FILTER PANEL (mobile bottom sheet)
+// ─────────────────────────────────────────────
+let filterPanelView = null;
+
+function setupFilterPanel() {
+  const overlay = document.getElementById('filter-panel-overlay');
+  const panel   = document.getElementById('filter-panel');
+  const closeBtn = document.getElementById('filter-panel-close');
+  const clearBtn = document.getElementById('filter-panel-clear');
+  const applyBtn = document.getElementById('filter-panel-apply');
+
+  // Filter buttons in each view
+  ['fisico', 'digital', 'receitas'].forEach(view => {
+    const btn = document.getElementById(`btn-filter-${view}`);
+    if (btn) btn.addEventListener('click', () => openFilterPanel(view));
+  });
+
+  if (overlay) overlay.addEventListener('click', closeFilterPanel);
+  if (closeBtn) closeBtn.addEventListener('click', closeFilterPanel);
+  if (clearBtn) clearBtn.addEventListener('click', clearFilterPanel);
+  if (applyBtn) applyBtn.addEventListener('click', () => { closeFilterPanel(); renderView(state.currentView); });
+}
+
+function openFilterPanel(view) {
+  filterPanelView = view;
+  const body = document.getElementById('filter-panel-body');
+  if (!body) return;
+
+  const filters = getFilterConfig(view);
+  body.innerHTML = filters.map(f => `
+    <div class="filter-group">
+      <label>${f.label}</label>
+      ${f.type === 'select'
+        ? `<select id="panel-${f.id}">${f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</select>`
+        : `<input type="${f.type}" id="panel-${f.id}" placeholder="${f.placeholder || ''}">`}
+    </div>`).join('');
+
+  // Sync current filter values into panel
+  filters.forEach(f => {
+    const src = document.getElementById(f.id);
+    const dst = document.getElementById(`panel-${f.id}`);
+    if (src && dst) dst.value = src.value;
+  });
+
+  document.getElementById('filter-panel-overlay').classList.add('open');
+  document.getElementById('filter-panel').classList.add('open');
+  if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [body] });
+}
+
+function closeFilterPanel() {
+  if (!filterPanelView) return;
+  const filters = getFilterConfig(filterPanelView);
+  // Sync panel values back to real filter inputs
+  filters.forEach(f => {
+    const src = document.getElementById(`panel-${f.id}`);
+    const dst = document.getElementById(f.id);
+    if (src && dst) dst.value = src.value;
+  });
+  document.getElementById('filter-panel-overlay').classList.remove('open');
+  document.getElementById('filter-panel').classList.remove('open');
+  renderView(state.currentView);
+  filterPanelView = null;
+}
+
+function clearFilterPanel() {
+  const body = document.getElementById('filter-panel-body');
+  if (body) body.querySelectorAll('select, input').forEach(el => el.value = '');
+  // Also clear real filter inputs
+  if (filterPanelView) {
+    const filters = getFilterConfig(filterPanelView);
+    filters.forEach(f => { const el = document.getElementById(f.id); if (el) el.value = ''; });
+  }
+  // Update filter button state
+  const btn = filterPanelView ? document.getElementById(`btn-filter-${filterPanelView}`) : null;
+  if (btn) btn.classList.remove('has-filters');
+}
+
+function getFilterConfig(view) {
+  const mesOptions = [{ value: '', label: 'Todos os meses' }];
+  const contas = [{ value: '', label: 'Todas as contas' }, ...['Sicoob','Inter','Conta Thiago','Manual','Outra'].map(c => ({ value: c, label: c }))];
+
+  if (view === 'fisico') return [
+    { id: 'filter-fisico-mes', label: 'Mês', type: 'select', options: mesOptions },
+    { id: 'filter-fisico-status', label: 'Status', type: 'select', options: [{ value:'',label:'Todos'},{ value:'pago',label:'Pago'},{ value:'pendente',label:'Pendente'},{ value:'atrasado',label:'Atrasado'}] },
+    { id: 'filter-fisico-tipo', label: 'Tipo', type: 'select', options: [{ value:'',label:'Todos'},{ value:'fixo',label:'Fixo'},{ value:'variavel',label:'Variável'}] },
+    { id: 'filter-fisico-conta', label: 'Conta', type: 'select', options: contas },
+    { id: 'filter-fisico-categoria', label: 'Categoria', type: 'select', options: [{ value:'',label:'Todas'},...CATEGORIAS_FISICO.map(c => ({ value: c, label: c }))] },
+  ];
+  if (view === 'digital') return [
+    { id: 'filter-digital-mes', label: 'Mês', type: 'select', options: mesOptions },
+    { id: 'filter-digital-status', label: 'Status', type: 'select', options: [{ value:'',label:'Todos'},{ value:'pago',label:'Pago'},{ value:'pendente',label:'Pendente'},{ value:'atrasado',label:'Atrasado'}] },
+    { id: 'filter-digital-tipo', label: 'Tipo', type: 'select', options: [{ value:'',label:'Todos'},{ value:'fixo',label:'Fixo'},{ value:'variavel',label:'Variável'}] },
+    { id: 'filter-digital-conta', label: 'Conta', type: 'select', options: contas },
+    { id: 'filter-digital-categoria', label: 'Categoria', type: 'select', options: [{ value:'',label:'Todas'},...CATEGORIAS_DIGITAL.map(c => ({ value: c, label: c }))] },
+  ];
+  return [
+    { id: 'filter-receitas-mes', label: 'Mês', type: 'select', options: mesOptions },
+    { id: 'filter-receitas-status', label: 'Status', type: 'select', options: [{ value:'',label:'Todos'},{ value:'recebido',label:'Recebido'},{ value:'pendente',label:'Pendente'}] },
+  ];
+}
+
+// ─────────────────────────────────────────────
+// MAIS MENU (mobile)
+// ─────────────────────────────────────────────
+function setupMaisMenu() {
+  const maisBtn   = document.getElementById('btn-mais');
+  const overlay   = document.getElementById('mais-overlay');
+  const closeBtn  = document.getElementById('mais-menu-close');
+  const backupBtn = document.getElementById('mais-backup');
+  const restoreBtn= document.getElementById('mais-restore');
+  const csvBtn    = document.getElementById('mais-export-csv');
+  const fileInput = document.getElementById('restore-file-input');
+
+  if (maisBtn)    maisBtn.addEventListener('click', openMaisMenu);
+  if (overlay)    overlay.addEventListener('click', closeMaisMenu);
+  if (closeBtn)   closeBtn.addEventListener('click', closeMaisMenu);
+  if (backupBtn)  backupBtn.addEventListener('click', () => { closeMaisMenu(); backupData(); });
+  if (restoreBtn) restoreBtn.addEventListener('click', () => { closeMaisMenu(); fileInput && fileInput.click(); });
+  if (csvBtn)     csvBtn.addEventListener('click', () => { closeMaisMenu(); exportCSVAll(); });
+  if (fileInput)  fileInput.addEventListener('change', (e) => restoreData(e.target.files[0]));
+}
+
+function openMaisMenu() {
+  document.getElementById('mais-overlay').classList.add('open');
+  document.getElementById('mais-menu').classList.add('open');
+}
+
+function closeMaisMenu() {
+  const overlay = document.getElementById('mais-overlay');
+  const menu    = document.getElementById('mais-menu');
+  if (overlay) overlay.classList.remove('open');
+  if (menu)    menu.classList.remove('open');
+}
+
+function exportCSVAll() {
+  const items = state.gastos.filter(g => g.mes === state.currentMonth);
+  const rows = [['Área','Descrição','Valor','Vencimento','Status','Categoria','Conta','Tipo']];
+  items.forEach(g => rows.push([g.area, g.descricao, g.valor, g.dataVencimento, g.status, g.categoria, g.conta, g.tipoGasto]));
+  const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  downloadBlob(csv, `catavento-${state.currentMonth}.csv`, 'text/csv;charset=utf-8;﻿');
+  showToast('CSV exportado!', 'success');
 }
 
 function setupListDelegation(listId) {

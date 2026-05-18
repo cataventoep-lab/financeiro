@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useAppData } from '@/hooks/useAppData';
 import type { Tab, Entry, Receita } from '@/lib/types';
+import { months } from '@/lib/data';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { EntryListScreen } from './screens/EntryListScreen';
 import { ReceitasScreen } from './screens/ReceitasScreen';
@@ -11,14 +13,15 @@ import { MaisScreen } from './screens/MaisScreen';
 import { AddEntrySheet } from './sheets/AddEntrySheet';
 import { FilterSheet } from './sheets/FilterSheet';
 import { EntryDetailSheet } from './sheets/EntryDetailSheet';
-import {
-  IconHome, IconWallet, IconGlobe, IconInbox, IconMore, IconPlus,
-} from './Icons';
+import { IconHome, IconWallet, IconGlobe, IconInbox, IconMore, IconPlus } from './Icons';
 
 function StatusBar() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
   return (
     <div className="status-bar">
-      <span>9:41</span>
+      <span>{hh}:{mm}</span>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         <svg width="18" height="10" viewBox="0 0 18 10" fill="none">
           <circle cx="2" cy="8" r="1.5" fill="#26325B"/>
@@ -50,10 +53,12 @@ const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
 ];
 
 const pageVariants = {
-  initial: { opacity: 0, y: 8 },
+  initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
+  exit:    { opacity: 0, y: -10 },
 };
+
+type DetailEntry = (Entry & { area: 'fisico' | 'digital' }) | (Receita & { area: 'receita' });
 
 export function AppShell() {
   const appData = useAppData();
@@ -61,17 +66,21 @@ export function AppShell() {
   const [addOpen, setAddOpen] = useState(false);
   const [addArea, setAddArea] = useState<'fisico' | 'digital' | 'receita'>('fisico');
   const [filterOpen, setFilterOpen] = useState(false);
-  const [detail, setDetail] = useState<(Entry & { area: 'fisico' | 'digital' }) | (Receita & { area: 'receita' }) | null>(null);
+  const [detail, setDetail] = useState<DetailEntry | null>(null);
+
+  const currentMonthIdx = months.indexOf(appData.data.settings.currentMonth);
+  const prevMonth = () => appData.updateSettings({ currentMonth: months[Math.max(0, currentMonthIdx - 1)] });
+  const nextMonth = () => appData.updateSettings({ currentMonth: months[Math.min(11, currentMonthIdx + 1)] });
 
   const openAdd = (area?: 'fisico' | 'digital' | 'receita') => {
-    setAddArea(area || (tab === 'receitas' ? 'receita' : tab === 'digital' ? 'digital' : 'fisico'));
+    setAddArea(area ?? (tab === 'receitas' ? 'receita' : tab === 'digital' ? 'digital' : 'fisico'));
     setAddOpen(true);
   };
 
   if (!appData.loaded) {
     return (
       <div className="app-frame" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'var(--cv-gray-400)', fontSize: 14, fontWeight: 500 }}>Carregando...</div>
+        <div style={{ color: 'var(--cv-gray-400)', fontSize: 14, fontWeight: 500 }}>Carregando…</div>
       </div>
     );
   }
@@ -82,7 +91,7 @@ export function AppShell() {
     <div className="app-frame">
       <StatusBar />
 
-      <div className="app-scroll" key={tab}>
+      <div className="app-scroll">
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}
@@ -90,13 +99,16 @@ export function AppShell() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
           >
             {tab === 'dashboard' && (
               <DashboardScreen
                 data={appData.data}
+                currentMonth={appData.data.settings.currentMonth}
+                onPrevMonth={prevMonth}
+                onNextMonth={nextMonth}
                 onAdd={openAdd}
-                onOpenEntry={setDetail as (e: unknown) => void}
+                onOpenEntry={(e) => setDetail(e as DetailEntry)}
                 onNavigate={setTab}
               />
             )}
@@ -104,31 +116,46 @@ export function AppShell() {
               <EntryListScreen
                 kind="fisico"
                 entries={appData.data.fisicoEntries}
+                currentMonth={appData.data.settings.currentMonth}
+                onPrevMonth={prevMonth}
+                onNextMonth={nextMonth}
                 showValues={appData.data.settings.showValues}
                 onToggleValues={() => appData.updateSettings({ showValues: !appData.data.settings.showValues })}
                 onFilter={() => setFilterOpen(true)}
-                onOpenEntry={setDetail as (e: unknown) => void}
+                onOpenEntry={(e) => setDetail(e as DetailEntry)}
               />
             )}
             {tab === 'digital' && (
               <EntryListScreen
                 kind="digital"
                 entries={appData.data.digitalEntries}
+                currentMonth={appData.data.settings.currentMonth}
+                onPrevMonth={prevMonth}
+                onNextMonth={nextMonth}
                 showValues={appData.data.settings.showValues}
                 onToggleValues={() => appData.updateSettings({ showValues: !appData.data.settings.showValues })}
                 onFilter={() => setFilterOpen(true)}
-                onOpenEntry={setDetail as (e: unknown) => void}
+                onOpenEntry={(e) => setDetail(e as DetailEntry)}
               />
             )}
             {tab === 'receitas' && (
               <ReceitasScreen
                 receitas={appData.data.receitas}
+                currentMonth={appData.data.settings.currentMonth}
+                onPrevMonth={prevMonth}
+                onNextMonth={nextMonth}
                 onFilter={() => setFilterOpen(true)}
-                onOpenEntry={setDetail as (e: unknown) => void}
+                onOpenEntry={(e) => setDetail(e as DetailEntry)}
               />
             )}
             {tab === 'mais' && (
-              <MaisScreen settings={appData.data.settings} onUpdateSettings={appData.updateSettings} />
+              <MaisScreen
+                data={appData.data}
+                onUpdateSettings={appData.updateSettings}
+                onToggleRecurring={appData.toggleRecurringTemplate}
+                onDeleteRecurring={appData.deleteRecurringTemplate}
+                onClearData={appData.clearAllData}
+              />
             )}
           </motion.div>
         </AnimatePresence>
@@ -140,7 +167,7 @@ export function AppShell() {
           onClick={() => openAdd()}
           aria-label="Adicionar lançamento"
           whileTap={{ scale: 0.9 }}
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.06 }}
         >
           <IconPlus size={26} />
         </motion.button>
@@ -148,18 +175,13 @@ export function AppShell() {
 
       <nav className="bottom-nav">
         {tabs.map(t => (
-          <button
-            key={t.id}
-            className={`tab ${tab === t.id ? 'active' : ''}`}
-            onClick={() => setTab(t.id)}
-          >
+          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
             {t.icon}
             <span>{t.label}</span>
           </button>
         ))}
       </nav>
 
-      {/* Scrim */}
       <AnimatePresence>
         {sheetOpen && (
           <motion.div
@@ -167,12 +189,8 @@ export function AppShell() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => {
-              setAddOpen(false);
-              setFilterOpen(false);
-              setDetail(null);
-            }}
+            transition={{ duration: 0.18 }}
+            onClick={() => { setAddOpen(false); setFilterOpen(false); setDetail(null); }}
           />
         )}
       </AnimatePresence>
@@ -185,9 +203,11 @@ export function AppShell() {
             onClose={() => setAddOpen(false)}
             onSave={(entry) => {
               if ('prev' in entry) {
-                appData.addReceita(entry);
+                appData.addReceita(entry as Receita);
+                toast.success('Receita adicionada');
               } else {
-                appData.addEntry(entry);
+                appData.addEntry(entry as Entry);
+                toast.success('Lançamento salvo');
               }
               setAddOpen(false);
             }}
@@ -201,7 +221,7 @@ export function AppShell() {
             open={filterOpen}
             prefs={appData.data.filterPrefs}
             onClose={() => setFilterOpen(false)}
-            onSave={appData.updateFilterPrefs}
+            onSave={(p) => { appData.updateFilterPrefs(p); toast('Filtros aplicados'); }}
           />
         )}
       </AnimatePresence>
@@ -213,18 +233,18 @@ export function AppShell() {
             onClose={() => setDetail(null)}
             onMarkPaid={(id, area) => {
               appData.markEntryPaid(id, area);
+              toast.success('Marcado como pago');
               setDetail(null);
             }}
             onMarkReceived={(id) => {
               appData.markReceitaReceived(id);
+              toast.success('Marcado como recebido');
               setDetail(null);
             }}
             onDelete={(id, area) => {
-              if (area === 'receita') {
-                appData.deleteReceita(id);
-              } else {
-                appData.deleteEntry(id, area);
-              }
+              if (area === 'receita') appData.deleteReceita(id);
+              else appData.deleteEntry(id, area);
+              toast('Lançamento excluído');
               setDetail(null);
             }}
           />

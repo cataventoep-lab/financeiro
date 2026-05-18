@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,7 +16,23 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              background: '#26325B',
+              color: '#F4F1EA',
+              border: 'none',
+              borderRadius: '14px',
+              fontSize: '14px',
+              fontWeight: '600',
+            },
+          }}
+        />
+      </body>
     </html>
   );
 }

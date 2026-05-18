@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { AppData, Entry, Receita, FilterPrefs, AppSettings } from '@/lib/types';
+import type { AppData, Entry, Receita, FilterPrefs, AppSettings, RecurringTemplate } from '@/lib/types';
 import { defaultAppData, STORAGE_KEY } from '@/lib/data';
 
 export function useAppData() {
@@ -18,6 +18,7 @@ export function useAppData() {
           ...parsed,
           settings: { ...defaultAppData.settings, ...parsed.settings },
           filterPrefs: { ...defaultAppData.filterPrefs, ...parsed.filterPrefs },
+          recurringTemplates: parsed.recurringTemplates ?? defaultAppData.recurringTemplates,
         });
       }
     } catch {
@@ -37,7 +38,7 @@ export function useAppData() {
 
   const addEntry = useCallback((entry: Entry) => {
     setData(prev => {
-      const next = {
+      const next: AppData = {
         ...prev,
         fisicoEntries: entry.area === 'fisico' ? [...prev.fisicoEntries, entry] : prev.fisicoEntries,
         digitalEntries: entry.area === 'digital' ? [...prev.digitalEntries, entry] : prev.digitalEntries,
@@ -50,7 +51,7 @@ export function useAppData() {
   const updateEntry = useCallback((entry: Entry) => {
     setData(prev => {
       const update = (arr: Entry[]) => arr.map(e => e.id === entry.id ? entry : e);
-      const next = {
+      const next: AppData = {
         ...prev,
         fisicoEntries: entry.area === 'fisico' ? update(prev.fisicoEntries) : prev.fisicoEntries.filter(e => e.id !== entry.id),
         digitalEntries: entry.area === 'digital' ? update(prev.digitalEntries) : prev.digitalEntries.filter(e => e.id !== entry.id),
@@ -62,7 +63,7 @@ export function useAppData() {
 
   const deleteEntry = useCallback((id: string, area: 'fisico' | 'digital') => {
     setData(prev => {
-      const next = {
+      const next: AppData = {
         ...prev,
         fisicoEntries: area === 'fisico' ? prev.fisicoEntries.filter(e => e.id !== id) : prev.fisicoEntries,
         digitalEntries: area === 'digital' ? prev.digitalEntries.filter(e => e.id !== id) : prev.digitalEntries,
@@ -81,7 +82,7 @@ export function useAppData() {
       const update = (arr: Entry[]) => arr.map(e =>
         e.id === id ? { ...e, status: 'Pago' as const, paid: paidDate } : e
       );
-      const next = {
+      const next: AppData = {
         ...prev,
         fisicoEntries: area === 'fisico' ? update(prev.fisicoEntries) : prev.fisicoEntries,
         digitalEntries: area === 'digital' ? update(prev.digitalEntries) : prev.digitalEntries,
@@ -93,7 +94,7 @@ export function useAppData() {
 
   const addReceita = useCallback((receita: Receita) => {
     setData(prev => {
-      const next = { ...prev, receitas: [...prev.receitas, receita] };
+      const next: AppData = { ...prev, receitas: [...prev.receitas, receita] };
       save(next);
       return next;
     });
@@ -101,7 +102,7 @@ export function useAppData() {
 
   const updateReceita = useCallback((receita: Receita) => {
     setData(prev => {
-      const next = { ...prev, receitas: prev.receitas.map(r => r.id === receita.id ? receita : r) };
+      const next: AppData = { ...prev, receitas: prev.receitas.map(r => r.id === receita.id ? receita : r) };
       save(next);
       return next;
     });
@@ -109,7 +110,7 @@ export function useAppData() {
 
   const deleteReceita = useCallback((id: string) => {
     setData(prev => {
-      const next = { ...prev, receitas: prev.receitas.filter(r => r.id !== id) };
+      const next: AppData = { ...prev, receitas: prev.receitas.filter(r => r.id !== id) };
       save(next);
       return next;
     });
@@ -117,7 +118,7 @@ export function useAppData() {
 
   const markReceitaReceived = useCallback((id: string) => {
     setData(prev => {
-      const next = {
+      const next: AppData = {
         ...prev,
         receitas: prev.receitas.map(r =>
           r.id === id ? { ...r, status: 'Recebido' as const, recv: r.prev } : r
@@ -130,7 +131,7 @@ export function useAppData() {
 
   const updateSettings = useCallback((settings: Partial<AppSettings>) => {
     setData(prev => {
-      const next = { ...prev, settings: { ...prev.settings, ...settings } };
+      const next: AppData = { ...prev, settings: { ...prev.settings, ...settings } };
       save(next);
       return next;
     });
@@ -138,10 +139,41 @@ export function useAppData() {
 
   const updateFilterPrefs = useCallback((prefs: Partial<FilterPrefs>) => {
     setData(prev => {
-      const next = { ...prev, filterPrefs: { ...prev.filterPrefs, ...prefs } };
+      const next: AppData = { ...prev, filterPrefs: { ...prev.filterPrefs, ...prefs } };
       save(next);
       return next;
     });
+  }, [save]);
+
+  const addRecurringTemplate = useCallback((template: RecurringTemplate) => {
+    setData(prev => {
+      const next: AppData = { ...prev, recurringTemplates: [...prev.recurringTemplates, template] };
+      save(next);
+      return next;
+    });
+  }, [save]);
+
+  const toggleRecurringTemplate = useCallback((id: string) => {
+    setData(prev => {
+      const next: AppData = {
+        ...prev,
+        recurringTemplates: prev.recurringTemplates.map(t => t.id === id ? { ...t, active: !t.active } : t),
+      };
+      save(next);
+      return next;
+    });
+  }, [save]);
+
+  const deleteRecurringTemplate = useCallback((id: string) => {
+    setData(prev => {
+      const next: AppData = { ...prev, recurringTemplates: prev.recurringTemplates.filter(t => t.id !== id) };
+      save(next);
+      return next;
+    });
+  }, [save]);
+
+  const clearAllData = useCallback(() => {
+    save(defaultAppData);
   }, [save]);
 
   return {
@@ -157,5 +189,9 @@ export function useAppData() {
     markReceitaReceived,
     updateSettings,
     updateFilterPrefs,
+    addRecurringTemplate,
+    toggleRecurringTemplate,
+    deleteRecurringTemplate,
+    clearAllData,
   };
 }

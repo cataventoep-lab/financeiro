@@ -37,6 +37,23 @@ export interface Receita {
 
 export type Tab = 'dashboard' | 'fisico' | 'digital' | 'receitas' | 'mais';
 
+export interface RecurringTemplate {
+  id: string;
+  area: EntryArea;
+  desc: string;
+  cat: string;
+  icon: string;
+  value: number;
+  account: string;
+  kind: EntryKind;
+  responsible?: string;
+  paymentMethod?: string;
+  frequency: string;
+  dueDay: string;
+  notes?: string;
+  active: boolean;
+}
+
 export interface FilterPrefs {
   month: string;
   status: string;
@@ -57,4 +74,5 @@ export interface AppData {
   receitas: Receita[];
   settings: AppSettings;
   filterPrefs: FilterPrefs;
+  recurringTemplates: RecurringTemplate[];
 }

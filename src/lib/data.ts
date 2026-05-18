@@ -1,4 +1,4 @@
-import type { Entry, Receita, AppData } from './types';
+import type { Entry, Receita, AppData, RecurringTemplate } from './types';
 
 export const defaultFisicoEntries: Entry[] = [
   { id: 'f1', area: 'fisico', desc: 'Aluguel do espaço', cat: 'Aluguel', icon: 'building', value: 2800.00, due: '05/04', status: 'Pago', paid: '03/04', account: 'Itaú principal', recurrent: true, kind: 'Fixo', responsible: 'Compartilhado' },
@@ -33,10 +33,21 @@ export const defaultReceitas: Receita[] = [
   { id: 'r7', desc: 'Aulas Luiza · Heitor', prev: 1080.00, recv: 0, status: 'Previsto', date: '20/04', icon: 'users' },
 ];
 
+export const defaultRecurringTemplates: RecurringTemplate[] = [
+  { id: 'rt1', area: 'fisico', desc: 'Aluguel do espaço', cat: 'Aluguel', icon: 'building', value: 2800.00, account: 'Itaú principal', kind: 'Fixo', responsible: 'Compartilhado', frequency: 'Mensal', dueDay: '5', active: true },
+  { id: 'rt2', area: 'fisico', desc: 'Internet · Vivo Fibra', cat: 'Internet', icon: 'wifi', value: 149.90, account: 'PIX Itaú', kind: 'Fixo', responsible: 'Fernanda', frequency: 'Mensal', dueDay: '10', active: true },
+  { id: 'rt3', area: 'fisico', desc: 'Contabilidade', cat: 'Contabilidade', icon: 'calc', value: 380.00, account: 'Itaú principal', kind: 'Fixo', responsible: 'Compartilhado', frequency: 'Mensal', dueDay: '15', active: true },
+  { id: 'rt4', area: 'fisico', desc: 'Salário · Auxiliar', cat: 'Salários', icon: 'users', value: 1450.00, account: 'Itaú principal', kind: 'Fixo', responsible: 'Compartilhado', frequency: 'Mensal', dueDay: '5', active: true },
+  { id: 'rt5', area: 'digital', desc: 'ChatGPT Plus', cat: 'Inteligência Artificial', icon: 'sparkles', value: 110.00, account: 'Cartão Nubank', kind: 'Fixo', responsible: 'Compartilhado', frequency: 'Mensal', dueDay: '8', active: true },
+  { id: 'rt6', area: 'digital', desc: 'Notion · plano Plus', cat: 'Ferramentas digitais', icon: 'tool', value: 48.00, account: 'Cartão Nubank', kind: 'Fixo', responsible: 'Fernanda', frequency: 'Mensal', dueDay: '12', active: true },
+  { id: 'rt7', area: 'digital', desc: 'iCloud · 200GB', cat: 'Armazenamento', icon: 'cloud', value: 11.90, account: 'Cartão Nubank', kind: 'Fixo', responsible: 'Fernanda', frequency: 'Mensal', dueDay: '3', active: true },
+];
+
 export const defaultAppData: AppData = {
   fisicoEntries: defaultFisicoEntries,
   digitalEntries: defaultDigitalEntries,
   receitas: defaultReceitas,
+  recurringTemplates: defaultRecurringTemplates,
   settings: {
     userName: 'Fernanda',
     showValues: true,
@@ -51,7 +62,7 @@ export const defaultAppData: AppData = {
   },
 };
 
-export const STORAGE_KEY = 'catavento_finance_v1';
+export const STORAGE_KEY = 'catavento_finance_v2';
 
 export function fmtBRL(n: number): string {
   return 'R$ ' + Math.abs(n).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -78,4 +89,14 @@ export const digitalCategories = [
 ];
 
 export const accounts = ['Itaú principal', 'PIX Itaú', 'Cartão Nubank', 'Caixinha'];
-export const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+export const months = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+export const monthsShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+export function monthIndex(month: string): number {
+  return months.indexOf(month);
+}
